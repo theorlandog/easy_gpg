@@ -22,8 +22,8 @@ jobs:
       #   run: go test
       # - uses: actions/upload-artifact@v2
       #   with: 
-      #     name: go-example
-      #     path: ./go-example
+      #     name: easy_gpg
+      #     path: ./easy_gpg
       - uses: "marvinpinto/action-automatic-releases@v1.2.1"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -31,4 +31,4 @@ jobs:
           automatic_release_tag: latest
           files: |
             LICENSE
-            go-example
+            easy_gpg
