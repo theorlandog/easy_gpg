@@ -10,7 +10,7 @@ var (
 )
 
 func init() {
-	// init() is a reserved function in go that executes
+	// init() is a reserved function in golang that executes
 	// when the package is first imported.
 
 	Log.Formatter = &logrus.TextFormatter{
