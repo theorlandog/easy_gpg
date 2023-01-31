@@ -2,10 +2,9 @@ package main
 
 import (
 	// stdlib imports
-	"bufio"
+
 	"fmt"
 	"os"
-	"os/user"
 	"runtime"
 	"strings"
 
@@ -48,32 +47,6 @@ func init() {
 	}
 }
 
-func collectKeyInfo() (name string, keylength string, email string) {
-	scanner := bufio.NewScanner(os.Stdin)
-	currentUser, err := user.Current()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	fmt.Printf("Enter your name. [%s]:\n", currentUser.Name)
-	scanner.Scan()
-	name = strings.TrimSpace(scanner.Text())
-	if name == "" {
-		// Set the default to the OS username
-		name = currentUser.Name
-	}
-	fmt.Println("Enter your keylength. [4096]:")
-	scanner.Scan()
-	keylength = strings.TrimSpace(scanner.Text())
-	if keylength == "" {
-		// Set default keylength
-		keylength = "4096"
-	}
-	fmt.Println("Enter your email. []:")
-	scanner.Scan()
-	email = strings.TrimSpace(scanner.Text())
-	return
-}
-
 func main() {
 	log.Infof("easy_gpg VERSION: %s", config.VERSION)
 
@@ -90,5 +63,7 @@ func main() {
 		fmt.Println("easy_gpg only works on Windows, MacOS, and Linux")
 	}
 
-	_, _, _ = collectKeyInfo()
+	// name, keylength, email = steps.CollectKeyInfo()
+	_, _, _ = steps.CollectKeyInfo()
+
 }
