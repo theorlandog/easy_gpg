@@ -2,10 +2,10 @@ package main
 
 import (
 	// stdlib imports
-
 	"bufio"
 	"fmt"
 	"os"
+	"os/user"
 	"runtime"
 	"strings"
 
@@ -16,7 +16,7 @@ import (
 	// Local imports
 	"github.com/theorlandog/easy_gpg/pkg/config"
 	"github.com/theorlandog/easy_gpg/pkg/logging"
-	"github.com/theorlandog/easy_gpg/pkg/utils"
+	"github.com/theorlandog/easy_gpg/pkg/steps"
 )
 
 var (
@@ -27,7 +27,7 @@ var (
 )
 
 func init() {
-	// init() is a reserved function in go that executes
+	// init() is a reserved function in golang that executes
 	// when the package is first imported.
 	for i, arg := range os.Args {
 		if strings.HasPrefix(arg, "--") {
@@ -50,15 +50,27 @@ func init() {
 
 func collectKeyInfo() (name string, keylength string, email string) {
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Println("Enter your name. []:")
+	currentUser, err := user.Current()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	fmt.Printf("Enter your name. [%s]:\n", currentUser.Name)
 	scanner.Scan()
-	name = scanner.Text()
+	name = strings.TrimSpace(scanner.Text())
+	if name == "" {
+		// Set the default to the OS username
+		name = currentUser.Name
+	}
 	fmt.Println("Enter your keylength. [4096]:")
 	scanner.Scan()
-	keylength = scanner.Text()
+	keylength = strings.TrimSpace(scanner.Text())
+	if keylength == "" {
+		// Set default keylength
+		keylength = "4096"
+	}
 	fmt.Println("Enter your email. []:")
 	scanner.Scan()
-	email = scanner.Text()
+	email = strings.TrimSpace(scanner.Text())
 	return
 }
 
@@ -69,11 +81,11 @@ func main() {
 
 	switch operating_system {
 	case "windows":
-		utils.WindowsCheckDependencies()
+		steps.WindowsCheckDependencies()
 	case "darwin":
-		utils.UnixCheckDependencies()
+		steps.UnixCheckDependencies()
 	case "linux":
-		utils.UnixCheckDependencies()
+		steps.UnixCheckDependencies()
 	default:
 		fmt.Println("easy_gpg only works on Windows, MacOS, and Linux")
 	}
