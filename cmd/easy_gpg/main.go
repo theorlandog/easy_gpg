@@ -2,7 +2,6 @@ package main
 
 import (
 	// stdlib imports
-
 	"fmt"
 	"os"
 	"runtime"
@@ -63,7 +62,7 @@ func main() {
 		fmt.Println("easy_gpg only works on Windows, MacOS, and Linux")
 	}
 
-	// name, keylength, email = steps.CollectKeyInfo()
-	_, _, _ = steps.CollectKeyInfo()
-
+	name, keyType, keyLength, email, password, expireDays := steps.CollectKeyInfo()
+	configString := steps.GenerateKeyGenConfigString(name, keyType, keyLength, email, password, expireDays)
+	print(configString)
 }
