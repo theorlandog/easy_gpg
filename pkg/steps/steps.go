@@ -3,13 +3,18 @@ package steps
 import (
 	// stdlib imports
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
+	"strconv"
 	"strings"
 
+	"text/template"
+
 	// Local imports
+	"github.com/theorlandog/easy_gpg/pkg/config"
 	"github.com/theorlandog/easy_gpg/pkg/logging"
 )
 
@@ -63,8 +68,10 @@ func WindowsCheckDependencies() int {
 	return 0
 }
 
-func CollectKeyInfo() (name string, keylength string, email string) {
+func CollectKeyInfo() (name string, keyType string, keylength string, email string, password string, expireDays int) {
 	scanner := bufio.NewScanner(os.Stdin)
+
+	// Get current user for default name
 	currentUser, err := user.Current()
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -76,6 +83,15 @@ func CollectKeyInfo() (name string, keylength string, email string) {
 		// Set the default to the OS username
 		name = currentUser.Name
 	}
+
+	fmt.Println("Enter your keytype. [RSA]:")
+	scanner.Scan()
+	keyType = strings.ToUpper(strings.TrimSpace(scanner.Text()))
+	if keyType == "" {
+		// Set default keylength
+		keyType = "RSA"
+	}
+
 	fmt.Println("Enter your keylength. [4096]:")
 	scanner.Scan()
 	keylength = strings.TrimSpace(scanner.Text())
@@ -83,8 +99,57 @@ func CollectKeyInfo() (name string, keylength string, email string) {
 		// Set default keylength
 		keylength = "4096"
 	}
+
 	fmt.Println("Enter your email. []:")
 	scanner.Scan()
 	email = strings.TrimSpace(scanner.Text())
+
+	fmt.Println("Enter a password for you key. []:")
+	scanner.Scan()
+	password = strings.TrimSpace(scanner.Text())
+
+	fmt.Println("How many days until the master key should expire? (0 is never). [0]:")
+	scanner.Scan()
+	expireDaysText := strings.TrimSpace(scanner.Text())
+	if expireDaysText == "" {
+		expireDays = 0
+	} else {
+		expireDays, err = strconv.Atoi(expireDaysText)
+		if err != nil {
+			// ... handle error
+			log.Fatalf(err.Error())
+		}
+	}
+
+	return
+}
+
+type KeyGenConfigParams struct {
+	Name       string
+	Email      string
+	KeyType    string
+	KeyLength  string
+	Password   string
+	ExpireDays int
+}
+
+func GenerateKeyGenConfigString(name string, keyType string, keyLength string, email string, password string, expireDays int) (configstring string) {
+	var buf bytes.Buffer
+	keyGenConfigParams := KeyGenConfigParams{
+		Name:       name,
+		Email:      email,
+		KeyType:    keyType,
+		KeyLength:  keyLength,
+		Password:   password,
+		ExpireDays: expireDays,
+	}
+	configTemplate := template.New("configTemplate")
+	configTemplate = template.Must(configTemplate.Parse(config.GENPARAMSTEMPLATE))
+
+	// template.Execute writes to an io.writer object
+	configTemplate.Execute(&buf, keyGenConfigParams)
+
+	configstring = buf.String()
+
 	return
 }
