@@ -133,16 +133,9 @@ type KeyGenConfigParams struct {
 	ExpireDays int
 }
 
-func GenerateKeyGenConfigString(name string, keyType string, keyLength string, email string, password string, expireDays int) (configstring string) {
+func GenerateKeyGenConfigString(keyGenConfigParams KeyGenConfigParams) (configstring string) {
 	var buf bytes.Buffer
-	keyGenConfigParams := KeyGenConfigParams{
-		Name:       name,
-		Email:      email,
-		KeyType:    keyType,
-		KeyLength:  keyLength,
-		Password:   password,
-		ExpireDays: expireDays,
-	}
+
 	configTemplate := template.New("configTemplate")
 	configTemplate = template.Must(configTemplate.Parse(config.GENPARAMSTEMPLATE))
 

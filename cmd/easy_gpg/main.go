@@ -63,6 +63,14 @@ func main() {
 	}
 
 	name, keyType, keyLength, email, password, expireDays := steps.CollectKeyInfo()
-	configString := steps.GenerateKeyGenConfigString(name, keyType, keyLength, email, password, expireDays)
+	keyGenConfigParams := steps.KeyGenConfigParams{
+		Name:       name,
+		KeyType:    keyType,
+		KeyLength:  keyLength,
+		Email:      email,
+		Password:   password,
+		ExpireDays: expireDays,
+	}
+	configString := steps.GenerateKeyGenConfigString(keyGenConfigParams)
 	print(configString)
 }
