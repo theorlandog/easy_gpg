@@ -146,3 +146,82 @@ func GenerateKeyGenConfigString(keyGenConfigParams KeyGenConfigParams) (configst
 
 	return
 }
+
+func ExtractFingerprintFromKeyList(keyList []string) (fingerprint string) {
+	fingerprint = ""
+
+	// using for loop, extract the finger print.
+	// example string: `fpr:::::::::577963869F20A39E58065014A24551D20C9D6802:`
+	for i := 0; i < len(keyList); i++ {
+		if strings.HasPrefix(keyList[i], "fpr") {
+			fingerprint = strings.Split(keyList[i], ":")[9]
+			break
+		}
+	}
+
+	// log if no fingerprint detected
+	if strings.TrimSpace(fingerprint) == "" {
+		log.Debug("No fingerprint detected.")
+	}
+
+	return
+}
+
+func GenerateKeys(keyGenConfigParams KeyGenConfigParams) int {
+	expire := strconv.FormatInt(int64(keyGenConfigParams.ExpireDays), 10)
+	if expire == "0" {
+		expire = "none"
+	}
+
+	// gpg --quick-gen-key --passphrase "" --batch "jack mehoff" RSA4096 cert,sign none
+	cmd := exec.Command("gpg", "--quick-gen-key", "--passphrase"+"="+keyGenConfigParams.Password, "--batch", keyGenConfigParams.Name, keyGenConfigParams.KeyType+keyGenConfigParams.KeyLength, "cert,sign", expire)
+	_, err := cmd.Output()
+	if err != nil {
+		log.Info("gpg failure.")
+		fmt.Println(cmd)
+		// return 1
+	}
+
+	// Prepend an '=' to the key users name to only list exact matches to the name
+	cmd = exec.Command("gpg", "--list-keys", "--with-colons", "--batch", "="+keyGenConfigParams.Name)
+	output, err := cmd.Output()
+	if err != nil {
+		log.Info("gpg failure.")
+		fmt.Println(cmd)
+		// return 1
+	}
+
+	// Turn the output into an array
+	keyList := strings.Split(string(output), "\n")
+	fingerprint := ExtractFingerprintFromKeyList(keyList)
+
+	// Following ideas from https://serverfault.com/questions/818289/add-second-sub-key-to-unattended-gpg-key#962553
+	cmd = exec.Command("gpg", "--quick-add-key", "--no-tty", "--batch", "--passphrase"+"="+keyGenConfigParams.Password, fingerprint, keyGenConfigParams.KeyType+keyGenConfigParams.KeyLength, "auth", expire)
+	_, err = cmd.Output()
+	if err != nil {
+		print("auth\n")
+		fmt.Println(cmd)
+		log.Info(err.Error())
+		// return 1
+	}
+
+	cmd = exec.Command("gpg", "--quick-add-key", "--no-tty", "--batch", "--passphrase"+"="+keyGenConfigParams.Password, fingerprint, keyGenConfigParams.KeyType+keyGenConfigParams.KeyLength, "sign", expire)
+	_, err = cmd.Output()
+	if err != nil {
+		print("sign\n")
+		fmt.Println(cmd)
+		log.Info(err.Error())
+		// return 1
+	}
+
+	cmd = exec.Command("gpg", "--quick-add-key", "--no-tty", "--batch", "--passphrase"+"="+keyGenConfigParams.Password, fingerprint, keyGenConfigParams.KeyType+keyGenConfigParams.KeyLength, "encrypt", expire)
+	_, err = cmd.Output()
+	if err != nil {
+		print("encrypt\n")
+		fmt.Println(cmd)
+		log.Info(err.Error())
+		// return 1
+	}
+
+	return 0
+}

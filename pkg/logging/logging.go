@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// Make the logger referenceable
 	Log = logrus.New()
 )
 

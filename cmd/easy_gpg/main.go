@@ -71,6 +71,5 @@ func main() {
 		Password:   password,
 		ExpireDays: expireDays,
 	}
-	configString := steps.GenerateKeyGenConfigString(keyGenConfigParams)
-	print(configString)
+	_ = steps.GenerateKeys(keyGenConfigParams)
 }
